@@ -11,3 +11,11 @@ void convertMillisToHumanFormat(int x, uint8_t &hours, uint8_t &minutes, uint8_t
   minutes = (x / 60) - (hours * 60);
   seconds = x - (minutes * 60) - (hours * 3600);
 }
+
+void printTimeToLCD(uint8_t hours, uint8_t minutes, uint8_t seconds) {
+  Serial.print(hours);
+  Serial.print(" ");
+  Serial.print(minutes);
+  Serial.print(" ");
+  Serial.println(seconds);
+}
