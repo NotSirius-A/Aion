@@ -23,16 +23,14 @@ void setup() {
   initializeEncoder(ENCODER_CLK, ENCODER_DT, ENCODER_BTN);
   lastEncoderValue = getEncoderValue();
   
-  timeLast = millis();
 }
 
 void loop() {
 
   unsigned long timeNow = millis();
-  timeLast = timeNow;
 
-  int8_t encoderValueChange = 0;
-  int16_t encoderValue = 0;  
+  int8_t encoderValueChange;
+  int16_t encoderValue;  
 
   if ((timeNow - debounceTimeLast) > DEBOUNCE_PERIOD) {
     uint16_t modeButtonState = digitalRead(MODE_BTN);
@@ -83,7 +81,7 @@ void loop() {
     default:
       Serial.println("def");
   }
-  
+
 }
 
 bool handleTransition() {
