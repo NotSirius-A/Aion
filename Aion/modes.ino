@@ -32,3 +32,17 @@ void handleVolumeControlMode(uint8_t & volume, bool isStealth, int8_t change) {
   // 'Return' volume
   volume = constrain(trunc(result), 0, 255);
 }
+
+void handleDutyCycleEditMode (uint8_t & dutyCycleLCDPercent, int8_t encoderValueChange) {
+  int8_t rv = dutyCycleLCDPercent + encoderValueChange * DUTY_CYCLE_EDIT_CHANGE_MULTIPLIER;
+  dutyCycleLCDPercent = constrain(rv, 0, 100);
+}
+
+void handleStealthEditMode (bool & isStealthMode, int8_t encoderValueChange) {
+  if (encoderValueChange > 0) {
+    isStealthMode = true;
+  } else if (encoderValueChange < 0) {
+    isStealthMode = false;
+  }
+
+}

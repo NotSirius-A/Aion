@@ -19,12 +19,28 @@ size_t numOfStates = sizeof(stateLengths)/sizeof(*stateLengths);
 
 uint8_t volume = VOLUME_DEFAULT;
 
+typedef struct State {
+  uint32_t period;
+  char verboseName[30];
+};
+
+
+State states[10];
+
 void setup() {
   Serial.begin(SERIAL_BAUD_RATE);
   pinMode(MODE_BTN, INPUT_PULLUP);
-  pinMode(5, OUTPUT);
+  pinMode(SPEAKER_PIN, OUTPUT);
 
 
+  //TESTING
+  State sth;
+  sth.period = 1000;
+  strcpy(sth.verboseName, "Work");
+  states[0] = sth;
+  Serial.println(states[0].verboseName);
+  //TESTING
+  
   initializeEncoder(ENCODER_CLK, ENCODER_DT, ENCODER_BTN);  
 }
 
@@ -34,8 +50,6 @@ void loop() {
   int16_t encoderValue = getEncoderValue();
   int8_t encoderValueChange = encoderValue - lastEncoderValue;
   lastEncoderValue = encoderValue;
-  delay(10);
-
 
   if ((timeNow - debounceTimeLast) > DEBOUNCE_PERIOD) {
     uint16_t modeButtonState = digitalRead(MODE_BTN);
@@ -70,7 +84,7 @@ void loop() {
     
         // Execute some code when transition to another state happens, for example let user know a transition happened with sound etc.
         for (bool i = false; i==false;) {
-          Serial.println("---------");
+          Serial.println("-------------------------------------");
           i = handleTransition();
         }
       }
@@ -79,21 +93,15 @@ void loop() {
       //handleStateLengthEditMode(encoderValueChange);
       break;
     case 2:
-      //handleDutyCycleEditMode(encoderValueChange);
-//        dutyCycleLCDPercent += encoderValueChange * 5;
-//  dutyCycleLCDPercent = constrain(dutyCycle, 0, 100);
+      handleDutyCycleEditMode(dutyCycleLCDPercent, encoderValueChange);
       break;
     case 3:
-      //handleStealthinessEditMode(encoderValueChange);
-//              if (encoderValueChange > 0) {
-//          isStealthMode = true;
-//        } else if (encoderValueChange < 0) {
-//          isStealthMode = false;
-//        }
+      handleStealthEditMode(isStealthMode, encoderValueChange);
+      Serial.println(isStealthMode);
       break;
     case 4:
       handleVolumeControlMode(volume, isStealthMode, encoderValueChange);
-      analogWrite(5, volume);
+      //analogWrite(SPEAKER_PIN, volume);
       break;
     default:
       Serial.println("def");

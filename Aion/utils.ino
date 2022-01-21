@@ -1,3 +1,8 @@
+typedef struct HumanTime {
+  uint32_t milliseconds;
+  uint8_t hours, minutes, seconds;
+  char stringFormat[20];
+};
 
 int32_t getTimeUntilTransition(unsigned long now, uint32_t lastTransitionTime, uint8_t currentState, uint32_t stateLengths[]) {
   int32_t rv = stateLengths[currentState] - (now - lastTransitionTime);
