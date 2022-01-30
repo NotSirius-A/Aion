@@ -1,12 +1,35 @@
 #include "config.h"
+#include "states_config.h"
+
+#include <Adafruit_GFX.h>    // Core graphics library
+#include <Adafruit_ST7735.h> // Hardware-specific library for ST7735
+
+#if defined(ARDUINO_FEATHER_ESP32) // Feather Huzzah32
+  #define TFT_CS         14
+  #define TFT_RST        15
+  #define TFT_DC         32
+
+#elif defined(ESP8266)
+  #define TFT_CS         4
+  #define TFT_RST        16                                            
+  #define TFT_DC         5
+
+#else
+  // For the breakout board, you can use any 2 or 3 pins.
+  // These pins will also work for the 1.8" TFT shield.
+  #define TFT_CS        10
+  #define TFT_RST        9 // Or set to -1 and connect to Arduino RESET pin
+  #define TFT_DC         8
+#endif
+
+Adafruit_ST7735 tft = Adafruit_ST7735(TFT_CS, TFT_DC, TFT_RST);
 
 unsigned long debounceTimeLast = 0;
 
 uint8_t currentState = 0;
 int32_t lastTransitionTime = 0;
 
-uint8_t currentMode = 0;
-
+uint8_t currentMode = START_MODE_DEFAULT;
 uint16_t prevModeButtonState = 0;
 
 int16_t lastEncoderValue = 0;
@@ -14,34 +37,35 @@ int16_t lastEncoderValue = 0;
 uint8_t dutyCycleLCDPercent = DUTY_CYCLE_LCD_PERCENT_DEFAULT;
 bool isStealthMode = STEALTHMODE_DEFAULT;
 
-uint32_t stateLengths[] = STATE_LENGTHS;
-size_t numOfStates = sizeof(stateLengths)/sizeof(*stateLengths);
-
 uint8_t volume = VOLUME_DEFAULT;
 
-typedef struct State {
-  uint32_t period;
-  char verboseName[30];
+typedef struct HumanTime {
+  uint32_t milliseconds;
+  uint8_t seconds, minutes, hours;
+  char stringFormat[20];
 };
-
-
-State states[10];
 
 void setup() {
   Serial.begin(SERIAL_BAUD_RATE);
   pinMode(MODE_BTN, INPUT_PULLUP);
   pinMode(SPEAKER_PIN, OUTPUT);
-
-
-  //TESTING
-  State sth;
-  sth.period = 1000;
-  strcpy(sth.verboseName, "Work");
-  states[0] = sth;
-  Serial.println(states[0].verboseName);
-  //TESTING
+  pinMode(17, OUTPUT);
+  analogWrite(17, HIGH);
   
   initializeEncoder(ENCODER_CLK, ENCODER_DT, ENCODER_BTN);  
+  tft.initR(INITR_GREENTAB);
+  tft.setTextWrap(false);
+  tft.setRotation(1);
+  tft.fillScreen(ST77XX_BLACK);
+  // font1 = [6, 7]
+  // font2 = [12,14]
+  // font3 = [18,21]
+  
+  tft.setCursor(tft.width()/2-(3.5*18), tft.height()/2-(21/2+21/5));
+  tft.setTextColor(ST77XX_RED);
+  tft.setTextSize(3);
+  tft.println("NewText");
+  tft.drawPixel(tft.width()/2, tft.height()/2, ST77XX_GREEN);
 }
 
 void loop() {
@@ -65,14 +89,11 @@ void loop() {
   }
 
   switch(currentMode) {
-    case 0:
-      int32_t timeUntilTransition;   
-      timeUntilTransition = getTimeUntilTransition(timeNow, lastTransitionTime , currentState, stateLengths);
-      uint8_t hours, minutes, seconds;
-      convertMillisToHumanFormat(timeUntilTransition, hours, minutes, seconds);
-
-      //printTimeToLCD(hours, minutes, seconds);
+    case 0: 
+      int32_t timeUntilTransition = getTimeUntilTransition(timeNow, lastTransitionTime , currentState, states);
       
+      HumanTime timeStruct = convertMillisToHumanFormat(timeUntilTransition);
+
       if (timeUntilTransition <= 0) {
         currentState++;
         lastTransitionTime = timeNow;
@@ -100,7 +121,7 @@ void loop() {
       Serial.println(isStealthMode);
       break;
     case 4:
-      handleVolumeControlMode(volume, isStealthMode, encoderValueChange);
+      handleVolumeControlMode(volume, encoderValueChange);
       //analogWrite(SPEAKER_PIN, volume);
       break;
     default:

@@ -2,7 +2,7 @@ void handleStateLengthEditMode(int8_t encoderValueChange) {
   Serial.println("handleStateLengthEditMode Not possible to implement with current code flow");
 }
 
-void handleVolumeControlMode(uint8_t & volume, bool isStealth, int8_t change) {
+void handleVolumeControlMode(uint8_t & volume, int8_t change) {
   /* This function takes in volume and change in argument and returns new volume
    Firstly, given volume is used to get the original function argument, then
    change in argument is added to the calculated value, so that the new value can be

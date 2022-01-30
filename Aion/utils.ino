@@ -1,26 +1,38 @@
-typedef struct HumanTime {
-  uint32_t milliseconds;
-  uint8_t hours, minutes, seconds;
-  char stringFormat[20];
-};
-
-int32_t getTimeUntilTransition(unsigned long now, uint32_t lastTransitionTime, uint8_t currentState, uint32_t stateLengths[]) {
-  int32_t rv = stateLengths[currentState] - (now - lastTransitionTime);
+int32_t getTimeUntilTransition(unsigned long now, uint32_t lastTransitionTime, uint8_t currentState, State states[]) {
+  int32_t rv = states[currentState].period - (now - lastTransitionTime);
   return rv;
 }
 
-void convertMillisToHumanFormat(int x, uint8_t &hours, uint8_t &minutes, uint8_t &seconds) {
-  /* Convert time in miliseconds and put directly into provided variables */
+HumanTime convertMillisToHumanFormat(int32_t x) {
   x = x / 1000;
-  hours = x / 3600;
-  minutes = (x / 60) - (hours * 60);
-  seconds = x - (minutes * 60) - (hours * 3600);
-}
+  uint8_t hours = x / 3600;
+  uint8_t minutes = (x / 60) - (hours * 60);
+  uint8_t seconds = x - (minutes * 60) - (hours * 3600);
 
-void printTimeToLCD(uint8_t hours, uint8_t minutes, uint8_t seconds) {
-  Serial.print(hours);
-  Serial.print(" ");
-  Serial.print(minutes);
-  Serial.print(" ");
-  Serial.println(seconds);
+  HumanTime rv = {x, seconds, minutes, hours};
+  
+  /*
+    Time should be displayed in a format h*:mm:ss, below code is to convert
+    something like 5 seconds to '05', so it adds '0' as padding when seconds/minutes is less than 10.
+    Better algorithm is certainly possible, but this is easy and simple.
+  */
+
+  char secondsString[3];
+  if (seconds < 10) {
+    sprintf(secondsString, "0%hu", seconds);
+  } else {
+    sprintf(secondsString, "%hu", seconds);
+  }
+
+  char minutesString[3];
+  if (minutes < 10) {
+    sprintf(minutesString, "0%hu", minutes);
+  } else {
+    sprintf(minutesString, "%hu", minutes);
+  }
+
+  sprintf(rv.stringFormat, "%hu:%2s:%2s", hours, minutesString, secondsString);
+
+  return rv;
+  
 }
