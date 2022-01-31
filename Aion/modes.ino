@@ -1,8 +1,8 @@
-void handleStateLengthEditMode(int8_t encoderValueChange) {
-  Serial.println("handleStateLengthEditMode Not possible to implement with current code flow");
+void handleStateLengthEditMode(State states[], size_t numOfStates, int8_t encoderValueChange) {
+  states[0].period += encoderValueChange * 1000;
 }
 
-void handleVolumeControlMode(uint8_t & volume, int8_t change) {
+uint8_t handleVolumeControlMode(uint8_t volume, int8_t change) {
   /* This function takes in volume and change in argument and returns new volume
    Firstly, given volume is used to get the original function argument, then
    change in argument is added to the calculated value, so that the new value can be
@@ -28,21 +28,22 @@ void handleVolumeControlMode(uint8_t & volume, int8_t change) {
   } else if (change < 0) {
     result = round(result-0.45);
   } 
-
-  // 'Return' volume
+  
   volume = constrain(trunc(result), 0, 255);
+  return volume;
 }
 
-void handleDutyCycleEditMode (uint8_t & dutyCycleLCDPercent, int8_t encoderValueChange) {
+uint8_t handleDutyCycleEditMode (uint8_t dutyCycleLCDPercent, int8_t encoderValueChange) {
   int8_t rv = dutyCycleLCDPercent + encoderValueChange * DUTY_CYCLE_EDIT_CHANGE_MULTIPLIER;
   dutyCycleLCDPercent = constrain(rv, 0, 100);
+  return dutyCycleLCDPercent;
 }
 
-void handleStealthEditMode (bool & isStealthMode, int8_t encoderValueChange) {
+bool handleStealthEditMode (bool isStealthMode, int8_t encoderValueChange) {
   if (encoderValueChange > 0) {
     isStealthMode = true;
   } else if (encoderValueChange < 0) {
     isStealthMode = false;
-  }
-
+  } 
+  return isStealthMode;
 }
