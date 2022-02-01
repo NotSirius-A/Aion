@@ -36,3 +36,44 @@ HumanTime convertMillisToHumanFormat(int32_t x) {
   return rv;
   
 }
+
+
+uint8_t getUpdatedCurrentMode (uint8_t currentMode, unsigned long & debounceTimeLast, uint16_t & prevModeButtonState) {
+  unsigned long timeNow = millis();
+  
+  if ((timeNow - debounceTimeLast) > DEBOUNCE_PERIOD) {
+    uint16_t modeButtonState = digitalRead(MODE_BUTTON);
+    debounceTimeLast = timeNow;
+
+    if (modeButtonState == HIGH && prevModeButtonState == LOW) {
+      currentMode++;
+      if (currentMode >= NUM_OF_MODES) {
+        currentMode = 0;
+      }
+    }
+    prevModeButtonState = modeButtonState;
+  }
+
+  return currentMode;
+
+}
+
+
+uint8_t getUpdatedCurrentStateEdit (uint8_t currentStateEdit, unsigned long & debounceTimeLast, uint16_t & prevSecondaryButtonState) {
+  unsigned long timeNow = millis();
+
+  if ((timeNow - debounceTimeLast) > DEBOUNCE_PERIOD) {
+    uint16_t secondaryButtonState = digitalRead(SECONDARY_BUTTON);
+    debounceTimeLast = timeNow;
+
+    if (secondaryButtonState == HIGH && prevSecondaryButtonState == LOW) {
+      currentStateEdit++;
+      if (currentStateEdit >= NUM_OF_STATES) {
+        currentStateEdit = 0;
+      }
+    }
+    prevSecondaryButtonState = secondaryButtonState;
+  }
+  return currentStateEdit;
+    
+}

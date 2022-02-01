@@ -1,5 +1,9 @@
-void handleStateLengthEditMode(State states[], size_t numOfStates, int8_t encoderValueChange) {
-  states[0].period += encoderValueChange * 1000;
+void handleStateLengthEditMode(State states[], uint8_t currentStateEdit, int8_t encoderValueChange) {
+  uint32_t period = states[currentStateEdit].period;
+
+  period += encoderValueChange * STATE_CHANGE_MULTIPLIER;
+ 
+  states[currentStateEdit].period = constrain(period, MIN_STATE_PERIOD, MAX_STATE_PERIOD);
 }
 
 uint8_t handleVolumeControlMode(uint8_t volume, int8_t change) {
@@ -24,9 +28,9 @@ uint8_t handleVolumeControlMode(uint8_t volume, int8_t change) {
   */ 
 
   if (change >= 0) {
-    result = round(result+0.45);
+    result = round(result+0.47);
   } else if (change < 0) {
-    result = round(result-0.45);
+    result = round(result-0.47);
   } 
   
   volume = constrain(trunc(result), 0, 255);
