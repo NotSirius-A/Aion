@@ -10,18 +10,18 @@ typedef struct State {
 #define STATE_CHANGE_MULTIPLIER 10000
 State states[] = {
   {
-   12000,
-   1000,
-   "Work"
+   7000,
+   20000,
+   "Work 1"
   },
   {
+   3000,
    10000,
-   200,
    "Pause 1"
   },
   {
-   3698000,
-   1000,
+   10000,
+   10000,
    "Pause 2"
   },
 };

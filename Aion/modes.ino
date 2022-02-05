@@ -1,9 +1,11 @@
-void handleStateLengthEditMode(State states[], uint8_t currentStateEdit, int8_t encoderValueChange) {
-  uint32_t period = states[currentStateEdit].period;
+State handleStateLengthEditMode(State state, int8_t encoderValueChange) {
+  uint32_t period = state.period;
 
   period += encoderValueChange * STATE_CHANGE_MULTIPLIER;
  
-  states[currentStateEdit].period = constrain(period, MIN_STATE_PERIOD, MAX_STATE_PERIOD);
+  state.period = constrain(period, MIN_STATE_PERIOD, MAX_STATE_PERIOD);
+
+  return state; 
 }
 
 uint8_t handleVolumeControlMode(uint8_t volume, int8_t change) {
@@ -38,7 +40,7 @@ uint8_t handleVolumeControlMode(uint8_t volume, int8_t change) {
 }
 
 uint8_t handleDutyCycleEditMode (uint8_t dutyCycleLCDPercent, int8_t encoderValueChange) {
-  int8_t rv = dutyCycleLCDPercent + encoderValueChange * DUTY_CYCLE_EDIT_CHANGE_MULTIPLIER;
+  int8_t rv = dutyCycleLCDPercent + encoderValueChange * DUTY_CYCLE_CHANGE_MULTIPLIER;
   dutyCycleLCDPercent = constrain(rv, 0, 100);
   return dutyCycleLCDPercent;
 }

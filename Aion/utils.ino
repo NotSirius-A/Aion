@@ -1,4 +1,31 @@
-int32_t getTimeUntilTransition(unsigned long now, uint32_t lastTransitionTime, uint8_t currentState, State states[]) {
+void printSplashScreen() {
+//  uint8_t coords[2] = {tft.width()/2, tft.height()/2-15};
+//  char text1[] = SPLASH_SCREEN_STR1;
+//  adjustTextCoords(coords, text1, 1, 5);
+//  tft.setCursor(coords[0], coords[1]);
+//  tft.setTextSize(5);
+//  tft.println(text1);
+//  
+//  coords[0] = tft.width()/2;
+//  coords[1] = tft.height()-20;
+//  char text2[] = SPLASH_SCREEN_STR2;
+//  adjustTextCoords(coords, text2, 1, 1);
+//  tft.setCursor(coords[0], coords[1]);
+//  tft.setTextSize(1);
+//  tft.println(text2);
+
+  uint8_t coords[2] = {tft.width()/2, tft.height()/2+15};
+  char text1[] = "<I        I>";
+  //tft.fillRoundRect(69, 98, 20, 45, 5, ST77XX_GREEN);
+  adjustTextCoords(coords, text1, 1, 2);
+  tft.setCursor(coords[0], coords[1]);
+  tft.setTextSize(2);
+  tft.println(text1);
+  tft.fillTriangle(5, 50+20, 20, 42+20, 20, 58+20, ST77XX_GREEN);
+
+}
+
+int32_t getTimeUntilTransition(unsigned long now, unsigned long lastTransitionTime, uint8_t currentState, State states[]) {
   int32_t rv = states[currentState].period - (now - lastTransitionTime);
   return rv;
 }
@@ -76,4 +103,45 @@ uint8_t getUpdatedCurrentStateEdit (uint8_t currentStateEdit, unsigned long & de
   }
   return currentStateEdit;
     
+}
+
+void adjustTextCoords(uint8_t coords[2], char str[], uint8_t id, uint8_t fontSize) {
+  /*
+    In order to print text to LCD with <Adafruit_ST7735.h> programmer must provide cursor coordinates,
+    which are used as a starting points (upper-left corner of the text). So if one wants to print
+    for example centered text in the middle of a screen coordinates must be calculated based on the length of the string.
+    This function adjusts given coords to correctly justify text. Ex. Printing centered text in the middle of the screen looks like this,
+
+    uint8_t coords[2] = {tft.width()/2, tft.height()/2};
+    adjustTextCoords(coords, "str", 1, 3);
+      
+    tft.setCursor(coords[0], coords[1]);
+    tft.setTextSize(3);
+    tft.println("str");
+   
+    ID:
+    0 - justify: left
+    1 - justify: center
+    2 - justify: right
+    
+  */
+
+  uint8_t strLength = strlen(str);
+  float halfStrLength = strLength / 2.0;
+  
+  switch(id) {
+    case 0:
+      coords[0] = coords[0];
+      coords[1] = coords[1]-(FONT_SIZE_1_Y*fontSize/1.8);
+      break;  
+    case 1:
+      coords[0] = coords[0]-(halfStrLength * (FONT_SIZE_1_X*fontSize));
+      coords[1] = coords[1]-(FONT_SIZE_1_Y*fontSize/1.8);
+      break;
+    case 2:
+      coords[0] = coords[0]-(strLength * (FONT_SIZE_1_X*fontSize));
+      coords[1] = coords[1]-(FONT_SIZE_1_Y*fontSize/1.8);
+      break; 
+  }
+
 }

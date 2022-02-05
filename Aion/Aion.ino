@@ -1,42 +1,19 @@
-#include "config.h"
-#include "states_config.h"
-
-
 #include <Adafruit_GFX.h>    // Core graphics library
 #include <Adafruit_ST7735.h> // Hardware-specific library for ST7735
 
-#if defined(ARDUINO_FEATHER_ESP32) // Feather Huzzah32
-  #define TFT_CS         14
-  #define TFT_RST        15
-  #define TFT_DC         32
+#include "config.h"
+#include "states_config.h"
 
-#elif defined(ESP8266)
-  #define TFT_CS         4
-  #define TFT_RST        16                                            
-  #define TFT_DC         5
-
-#else
-  // For the breakout board, you can use any 2 or 3 pins.
-  // These pins will also work for the 1.8" TFT shield.
-  #define TFT_CS        10
-  #define TFT_RST        9 // Or set to -1 and connect to Arduino RESET pin
-  #define TFT_DC         8
-#endif
-
-Adafruit_ST7735 tft = Adafruit_ST7735(TFT_CS, TFT_DC, TFT_RST);
+Adafruit_ST7735 tft = Adafruit_ST7735(LCD_TFT_CS, LCD_TFT_DC, LCD_TFT_RST);
 
 
-
-
-
+uint8_t currentState = 0;
+unsigned long lastTransitionTime = 0;
+uint8_t currentStateEdit = 0;
+uint16_t prevSecondaryButtonState = 1;
 
 unsigned long debounceTimeLast = 0;
 unsigned long secondaryDebounceTimeLast = 0;
-
-uint8_t currentState = 0;
-int32_t lastTransitionTime = 0;
-uint8_t currentStateEdit = 0;
-uint16_t prevSecondaryButtonState = 1;
 
 uint8_t currentMode = START_MODE_DEFAULT;
 uint16_t prevModeButtonState = 1;
@@ -56,10 +33,23 @@ typedef struct HumanTime {
 
 void setup() {
   Serial.begin(SERIAL_BAUD_RATE);
-  pinMode(MODE_BUTTON, INPUT_PULLUP);
+  
+  pinMode(PRIMARY_BUTTON, INPUT_PULLUP);
+  pinMode(SECONDARY_BUTTON, INPUT_PULLUP);
   pinMode(SPEAKER_PIN, OUTPUT);
+  digitalWrite(SPEAKER_PIN, LOW);
+  pinMode(BLUE_LED_PIN, OUTPUT);
+  digitalWrite(BLUE_LED_PIN, LOW);
+  pinMode(LCD_BACKLIGHT, OUTPUT);
+  digitalWrite(LCD_BACKLIGHT, HIGH);
+
+  
   pinMode(16, OUTPUT);
   digitalWrite(16, HIGH);
+
+
+
+  
   
   initializeEncoder(ENCODER_CLK, ENCODER_DT, ENCODER_BUTTON);  
 
@@ -68,18 +58,21 @@ void setup() {
   tft.setTextWrap(false);
   tft.setRotation(1);
   tft.fillScreen(ST77XX_BLACK);
-  // font1 = [6, 7]
-  // font2 = [12,14]
-  // font3 = [18,21]
-  
-  tft.setCursor(tft.width()/2-(3.5*18), tft.height()/2-(21/2+21/5));
+
   tft.setTextColor(ST77XX_RED, ST77XX_BLACK);
-  tft.setTextSize(1);
-  tft.println("NewText");
-  tft.drawPixel(tft.width()/2, tft.height()/2, ST77XX_GREEN);
 
+  /* Display a splash screen and delay for some time*/
+  tft.setTextColor(ST77XX_RED, ST77XX_BLACK);
+    
+  printSplashScreen();
+  delay(SPLASH_SCREEN_DURATION*300);
+  
+  tft.fillScreen(ST77XX_BLACK);
 
-
+  unsigned int timeNow = millis();
+  debounceTimeLast = timeNow;
+  secondaryDebounceTimeLast = timeNow;
+  lastTransitionTime = timeNow;
 }
 
 void loop() {
@@ -91,52 +84,77 @@ void loop() {
 
   currentMode = getUpdatedCurrentMode(currentMode, debounceTimeLast, prevModeButtonState);
 
+  if (isStealthMode && currentMode == 0) {
+    digitalWrite(LCD_BACKLIGHT, LOW);
+  } else {
+    digitalWrite(LCD_BACKLIGHT, HIGH);
+  }
+
   switch(currentMode) {
+    /*
+      switch statement seems to break when in a case there's an inline declaration + initialization, like int32_t t = 0;
+      but only when its directly inside a case, nested are fine 
+    */
     case 0: 
       int32_t timeUntilTransition;
       timeUntilTransition = getTimeUntilTransition(timeNow, lastTransitionTime , currentState, states);
 
       HumanTime timeStruct;
-      timeStruct = convertMillisToHumanFormat(timeUntilTransition);
+      timeStruct = convertMillisToHumanFormat(timeUntilTransition + 600); // +600=0.6s offset, so it doesnt display 0:00:00 for long
 
+      uint8_t coords[2];
+      coords[0] = tft.width()/2;
+      coords[1] = tft.height()/2-5;
+      adjustTextCoords(coords, timeStruct.stringFormat, 1, 3);
+      
+      tft.setCursor(coords[0], coords[1]);
+      tft.setTextSize(3);
+      tft.println(timeStruct.stringFormat);
+
+      coords[0] = tft.width()/2;
+      coords[1] = tft.height()-20;
+      adjustTextCoords(coords, states[currentState].verboseName, 1, 2);
+      tft.setCursor(coords[0], coords[1]);
+      tft.setTextSize(2);
+      tft.println(states[currentState].verboseName);
+      
       if (timeUntilTransition <= 0) {
+        uint32_t pausePeriod = states[currentState].pausePeriod;
         currentState++;
-        lastTransitionTime = timeNow;
-    
         // Loop back to state 0 when last state ends
         if (currentState >= NUM_OF_STATES) {
           currentState = 0; 
         }
-    
+        
         // Execute some code when transition to another state happens, for example let user know a transition happened with sound etc.
-        for (unsigned int startTime = timeNow; (millis() - startTime) < states[currentState-1].pausePeriod;) {
-          Serial.println(states[currentState].verboseName);
-          handleTransition();
+        tft.fillScreen(ST77XX_BLACK);
+        for (unsigned long startTime = timeNow; (timeNow - startTime) < pausePeriod;) {
+          handleTransition(timeNow - startTime, pausePeriod, currentState, volume, isStealthMode);
+          timeNow = millis();
         }
+        analogWrite(SPEAKER_PIN, LOW);
+        digitalWrite(BLUE_LED_PIN, LOW);
+        tft.fillScreen(ST77XX_BLACK);
+        
+        lastTransitionTime = timeNow;
       }
-      tft.setCursor(tft.width()/2-(3.5*18), tft.height()/2-(21/2+21/5));
-      tft.setTextSize(3);
-      tft.println(timeStruct.stringFormat);
       break; 
       
     case 1:   
       currentStateEdit = getUpdatedCurrentStateEdit(currentStateEdit, secondaryDebounceTimeLast, prevSecondaryButtonState);
-      
-      // No return value, function changes `states` directly
-      handleStateLengthEditMode(states, currentStateEdit, encoderValueChange);
+      states[currentStateEdit] = handleStateLengthEditMode(states[currentStateEdit], encoderValueChange);
       break;
       
     case 2:
-      dutyCycleLCDPercent = handleDutyCycleEditMode(dutyCycleLCDPercent, encoderValueChange);
+      isStealthMode = handleStealthEditMode(isStealthMode, encoderValueChange);
       break;
       
     case 3:
-      isStealthMode = handleStealthEditMode(isStealthMode, encoderValueChange);
+      dutyCycleLCDPercent = handleDutyCycleEditMode(dutyCycleLCDPercent, encoderValueChange);
       break;
       
     case 4:
       volume = handleVolumeControlMode(volume, encoderValueChange);
-      //analogWrite(SPEAKER_PIN, volume);
       break;
       
     default:
@@ -145,6 +163,27 @@ void loop() {
 
 }
 
-void handleTransition() {
+void handleTransition(unsigned long timeSinceStarted, uint32_t pausePeriod, uint8_t currentState, uint8_t volume, bool isStealthMode) {
+  if (isStealthMode) {
+    volume = 0;
+  }
+  
+  uint8_t coords[2] = {tft.width()/2, tft.height()/2};
+  adjustTextCoords(coords, states[currentState].verboseName, 1, 3);
+  tft.setCursor(coords[0], coords[1]);
+  tft.setTextSize(3);
+  tft.println(states[currentState].verboseName);
+
+  unsigned long pulseLength = pausePeriod/(2*(currentState+1));
+  if (timeSinceStarted < pausePeriod/2) {
+    digitalWrite(BLUE_LED_PIN, HIGH);
+    analogWrite(SPEAKER_PIN, volume);
+  } else if (((timeSinceStarted-pausePeriod/2) % pulseLength) > pulseLength/2){
+    digitalWrite(BLUE_LED_PIN, HIGH);
+    analogWrite(SPEAKER_PIN, volume);
+  } else {
+    digitalWrite(BLUE_LED_PIN, LOW);
+    analogWrite(SPEAKER_PIN, LOW);
+  }
 
 }
