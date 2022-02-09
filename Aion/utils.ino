@@ -1,29 +1,63 @@
-void printSplashScreen() {
-//  uint8_t coords[2] = {tft.width()/2, tft.height()/2-15};
-//  char text1[] = SPLASH_SCREEN_STR1;
-//  adjustTextCoords(coords, text1, 1, 5);
-//  tft.setCursor(coords[0], coords[1]);
-//  tft.setTextSize(5);
-//  tft.println(text1);
-//  
-//  coords[0] = tft.width()/2;
-//  coords[1] = tft.height()-20;
-//  char text2[] = SPLASH_SCREEN_STR2;
-//  adjustTextCoords(coords, text2, 1, 1);
-//  tft.setCursor(coords[0], coords[1]);
-//  tft.setTextSize(1);
-//  tft.println(text2);
+word convertRGB( byte R, byte G, byte B)
+{
+  /* 
+    Credit: HazardsMind
+    https://forum.arduino.cc/t/adafruit-library-tft-colours/239777/7
+    return ( ((R & 0xF8) << 8) | ((G & 0xFC) << 3) | (B >> 3) );
 
-  uint8_t coords[2] = {tft.width()/2, tft.height()/2+15};
-  char text1[] = "<I        I>";
-  //tft.fillRoundRect(69, 98, 20, 45, 5, ST77XX_GREEN);
-  adjustTextCoords(coords, text1, 1, 2);
+    Display used in this project has red and blue flipped, so its BGR,
+    therefore I modifed this function a bit to correct for that.
+    
+  */
+  return ( ((B & 0xF8) << 8) | ((G & 0xFC) << 3) | (R >> 3) );
+}
+
+void printSplashScreen() {
+  uint8_t coords[2] = {tft.width()/2, tft.height()/2-15};
+  char text1[] = SPLASH_SCREEN_STR1;
+  adjustTextCoords(coords, text1, 1, 5);
   tft.setCursor(coords[0], coords[1]);
-  tft.setTextSize(2);
+  tft.setTextSize(5);
   tft.println(text1);
-  tft.fillTriangle(5, 50+20, 20, 42+20, 20, 58+20, ST77XX_GREEN);
+  
+  coords[0] = tft.width()/2;
+  coords[1] = tft.height()-20;
+  char text2[] = SPLASH_SCREEN_STR2;
+  adjustTextCoords(coords, text2, 1, 1);
+  tft.setCursor(coords[0], coords[1]);
+  tft.setTextSize(1);
+  tft.println(text2);
+
 
 }
+
+
+void printProgressBar(int n) {
+  n = max(n, 0); // N should be postive
+  
+  double yStart = 100;
+
+  word black = convertRGB(0, 0, 0);
+  word color2 = convertRGB(5, 225, 124);
+  word color3 = convertRGB(255, 255, 255);
+
+  int steps = 32;
+  double paddingX = 7;
+  double x = tft.width()-2*paddingX;
+  double y = 28; 
+  double a = 7;
+  double L = x-(4.4*a)+2;
+
+  tft.fillTriangle(0+paddingX, yStart-y/2, paddingX+a, yStart, paddingX+a, yStart-y, color3);
+
+  tft.fillTriangle(paddingX+x, yStart-y/2, paddingX+x-a, yStart, paddingX+x-a, yStart-y, color3);
+
+  tft.drawRect(paddingX+(1.6*a), yStart-y, x-(3.2*a)+2, y, color2);
+
+  tft.fillRect(paddingX+(2.2*a)+(n*(L/steps)), yStart-(y*0.8), (steps-n)*(L/steps)+(a*0.3), (0.6*y)+2, black);
+  tft.fillRect(paddingX+(2.2*a), yStart-(y*0.8), n*(L/steps), (0.6*y)+2, color2);
+}
+
 
 int32_t getTimeUntilTransition(unsigned long now, unsigned long lastTransitionTime, uint8_t currentState, State states[]) {
   int32_t rv = states[currentState].period - (now - lastTransitionTime);

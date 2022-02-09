@@ -36,6 +36,9 @@ uint8_t handleVolumeControlMode(uint8_t volume, int8_t change) {
   } 
   
   volume = constrain(trunc(result), 0, 255);
+
+  printProgressBar(x);
+  
   return volume;
 }
 

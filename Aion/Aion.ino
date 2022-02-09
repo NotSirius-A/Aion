@@ -64,8 +64,8 @@ void setup() {
   /* Display a splash screen and delay for some time*/
   tft.setTextColor(ST77XX_RED, ST77XX_BLACK);
     
-  printSplashScreen();
-  delay(SPLASH_SCREEN_DURATION*300);
+  //printSplashScreen();
+  delay(SPLASH_SCREEN_DURATION);
   
   tft.fillScreen(ST77XX_BLACK);
 
@@ -83,6 +83,14 @@ void loop() {
   lastEncoderValue = encoderValue;
 
   currentMode = getUpdatedCurrentMode(currentMode, debounceTimeLast, prevModeButtonState);
+
+
+
+  currentMode = 4;
+
+
+
+
 
   if (isStealthMode && currentMode == 0) {
     digitalWrite(LCD_BACKLIGHT, LOW);
