@@ -1,20 +1,29 @@
+#define VERSION "v1.0"
+#define PROJECT_TITLE "Aion"
+#define AUTHOR_NICKNAME "NotSirius-A"
+#define SHORT_GITHUB_LINK "github.com/NotSirius-A"
+#define GITHUB_LINK "https://github.com/NotSirius-A"
+
+
+
+
 #define SERIAL_BAUD_RATE 115200
 
 #define ENCODER_CLK 2
 #define ENCODER_DT 3
 #define ENCODER_BUTTON 4
 #define SPEAKER_PIN 5
-#define PRIMARY_BUTTON 4
-#define SECONDARY_BUTTON ENCODER_BUTTON
+#define PRIMARY_BUTTON ENCODER_BUTTON
+#define SECONDARY_BUTTON 18
 #define LCD_TFT_CS 10
 #define LCD_TFT_RST 9 
 #define LCD_TFT_DC 8
 #define LCD_BACKLIGHT 15
 #define BLUE_LED_PIN 7
 
-#define SPLASH_SCREEN_STR1 "Aion"
-#define SPLASH_SCREEN_STR2 "github.com/NotSirius-A"
-#define SPLASH_SCREEN_DURATION 3000
+#define SPLASH_SCREEN_STR1 PROJECT_TITLE
+#define SPLASH_SCREEN_STR2 SHORT_GITHUB_LINK
+#define SPLASH_SCREEN_DURATION 2000
 
 #define MODE_BUTTON PRIMARY_BUTTON
 #define NUM_OF_MODES 5
@@ -28,11 +37,4 @@
 #define START_MODE_DEFAULT 0
 #define DUTY_CYCLE_LCD_PERCENT_DEFAULT 100
 #define STEALTHMODE_DEFAULT false
-#define VOLUME_DEFAULT 0
-
-
-/*
-  Letter size in pixels
-*/
-#define FONT_SIZE_1_X 6
-#define FONT_SIZE_1_Y 7
+#define VOLUME_DEFAULT 5

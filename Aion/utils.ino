@@ -32,30 +32,20 @@ void printSplashScreen() {
 }
 
 
-void printProgressBar(int n) {
-  n = max(n, 0); // N should be postive
-  
-  double yStart = 100;
-
-  word black = convertRGB(0, 0, 0);
-  word color2 = convertRGB(5, 225, 124);
-  word color3 = convertRGB(255, 255, 255);
-
-  int steps = 32;
-  double paddingX = 7;
-  double x = tft.width()-2*paddingX;
-  double y = 28; 
-  double a = 7;
+void printProgressBar(double percentageFilled, double xStart, double yStart, double x, double y) {
+  percentageFilled = constrain(percentageFilled, 0, 1);
+   
+  double a = y/4;
   double L = x-(4.4*a)+2;
 
-  tft.fillTriangle(0+paddingX, yStart-y/2, paddingX+a, yStart, paddingX+a, yStart-y, color3);
+  tft.fillTriangle(xStart, yStart-y/2, xStart+a, yStart, xStart+a, yStart-y, SECONDARY_THEME_COLOR);
 
-  tft.fillTriangle(paddingX+x, yStart-y/2, paddingX+x-a, yStart, paddingX+x-a, yStart-y, color3);
+  tft.fillTriangle(xStart+x, yStart-y/2, xStart+x-a, yStart, xStart+x-a, yStart-y, SECONDARY_THEME_COLOR);
 
-  tft.drawRect(paddingX+(1.6*a), yStart-y, x-(3.2*a)+2, y, color2);
+  tft.drawRect(xStart+(1.6*a), yStart-y, x-(3.2*a)+2, y, PRIMARY_THEME_COLOR);
 
-  tft.fillRect(paddingX+(2.2*a)+(n*(L/steps)), yStart-(y*0.8), (steps-n)*(L/steps)+(a*0.3), (0.6*y)+2, black);
-  tft.fillRect(paddingX+(2.2*a), yStart-(y*0.8), n*(L/steps), (0.6*y)+2, color2);
+  tft.fillRect(xStart+(2.2*a)+percentageFilled*L, yStart-(y*0.8), L*(1-percentageFilled)+(a*0.3), (0.6*y)+2, BACKGROUND_COLOR);
+  tft.fillRect(xStart+(2.2*a), yStart-(y*0.8), percentageFilled*L, (0.6*y)+2, PRIMARY_THEME_COLOR);
 }
 
 
