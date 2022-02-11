@@ -1,9 +1,11 @@
 #include <Adafruit_GFX.h>    // Core graphics library
 #include <Adafruit_ST7735.h> // Hardware-specific library for ST7735
+#include <EEPROM.h>
 
 #include "config.h"
 #include "states_config.h"
 #include "GUI_config.h"
+#include "EEPROM_config.h"
 
 Adafruit_ST7735 tft = Adafruit_ST7735(LCD_TFT_CS, LCD_TFT_DC, LCD_TFT_RST);
 
@@ -18,6 +20,8 @@ uint16_t prevSecondaryButtonState = 1;
 
 unsigned long debounceTimeLast = 0;
 unsigned long secondaryDebounceTimeLast = 0; 
+
+unsigned long EEPROMSaveTimeLast = 0;
 
 uint8_t currentMode = START_MODE_DEFAULT;
 uint16_t prevModeButtonState = 1;
@@ -48,8 +52,8 @@ void setup() {
   digitalWrite(LCD_BACKLIGHT, HIGH);
 
 
-
-
+  //fillEEPROMwithDefaults();
+  loadSettingsFromEEPROM();
   
   pinMode(16, OUTPUT);
   digitalWrite(16, HIGH);
@@ -186,12 +190,38 @@ void loop() {
       Serial.println("BAD MODE VALUE");
   }
 
+ 
   if ((digitalRead(SECONDARY_BUTTON) == LOW) && (currentMode == 4)) {
     analogWrite(SPEAKER_PIN, volume);
   } else {
     analogWrite(SPEAKER_PIN, LOW);
   }
 
+  if ((timeNow - EEPROMSaveTimeLast) > EEPROM_SAVE_PERIOD) {
+    bool oldStealthMode;
+    EEPROM.get(EE_STEALTHMODE_ADDRESS, oldStealthMode);
+    if (oldStealthMode != isStealthMode) {
+      EEPROM.put(EE_STEALTHMODE_ADDRESS, isStealthMode);
+    }
+  
+    uint8_t oldDutyCycle;
+    EEPROM.get(EE_DUTYCYCLE_ADDRESS, oldDutyCycle);
+    if (oldDutyCycle != dutyCycleLCDPercent) {
+      EEPROM.put(EE_DUTYCYCLE_ADDRESS, dutyCycleLCDPercent);
+    }
+  
+    uint8_t oldVolume;
+    EEPROM.get(EE_VOLUME_ADDRESS, oldVolume);
+    if (oldVolume != volume) {
+      EEPROM.put(EE_VOLUME_ADDRESS, volume);
+    }
+  
+    State oldState;
+    EEPROM.get(EE_STATES_MAX_ADDRESS - ((currentStateEdit+1)*SIZE_OF_STATE), oldState);;
+    if (oldState.period != states[currentStateEdit].period) {
+      EEPROM.put(EE_STATES_MAX_ADDRESS - ((currentStateEdit+1)*SIZE_OF_STATE), states[currentStateEdit]);
+    }
+  }
 }
 
 void handleTransition(unsigned long timeSinceStarted, uint32_t pausePeriod, uint8_t currentState, uint8_t volume, bool isStealthMode) {
@@ -200,9 +230,9 @@ void handleTransition(unsigned long timeSinceStarted, uint32_t pausePeriod, uint
   }
   
   uint8_t coords[2] = {tft.width()/2, tft.height()/2};
-  adjustTextCoords(coords, states[currentState].verboseName, 1, 3);
+  adjustTextCoords(coords, states[currentState].verboseName, 1, 2);
   tft.setCursor(coords[0], coords[1]);
-  tft.setTextSize(3);
+  tft.setTextSize(2);
   tft.println(states[currentState].verboseName);
 
   unsigned long pulseLength = pausePeriod/(2*(currentState+1));

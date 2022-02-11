@@ -169,3 +169,18 @@ void adjustTextCoords(uint8_t coords[2], char str[], uint8_t id, uint8_t fontSiz
   }
 
 }
+
+void loadSettingsFromEEPROM() {
+/*
+  Loads settings from EEPROM directly into global variables
+*/
+
+  EEPROM.get(EE_STEALTHMODE_ADDRESS, isStealthMode);
+  EEPROM.get(EE_DUTYCYCLE_ADDRESS, dutyCycleLCDPercent);
+  EEPROM.get(EE_VOLUME_ADDRESS, volume);
+
+  for (int i = 0; i < NUM_OF_STATES; i++) {
+    EEPROM.get(EE_STATES_MAX_ADDRESS - ((i+1)*SIZE_OF_STATE), states[i]);
+  }
+  
+}
