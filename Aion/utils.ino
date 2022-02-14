@@ -42,10 +42,11 @@ void printProgressBar(double percentageFilled, double xStart, double yStart, dou
 
   tft.fillTriangle(xStart+x, yStart-y/2, xStart+x-a, yStart, xStart+x-a, yStart-y, SECONDARY_THEME_COLOR);
 
-  tft.drawRect(xStart+(1.6*a), yStart-y, x-(3.2*a)+2, y, PRIMARY_THEME_COLOR);
+  tft.drawRect(xStart+(1.6*a), yStart-y, x-(3.2*a)+2, y, SECONDARY_THEME_COLOR);
 
   tft.fillRect(xStart+(2.2*a)+percentageFilled*L, yStart-(y*0.8), L*(1-percentageFilled)+(a*0.3), (0.6*y)+2, BACKGROUND_COLOR);
   tft.fillRect(xStart+(2.2*a), yStart-(y*0.8), percentageFilled*L, (0.6*y)+2, PRIMARY_THEME_COLOR);
+
 }
 
 
@@ -54,7 +55,7 @@ int32_t getTimeUntilTransition(unsigned long now, unsigned long lastTransitionTi
   return rv;
 }
 
-HumanTime convertMillisToHumanFormat(int32_t x) {
+HumanTime convertMillisToHumanFormat(unsigned long x) {
   x = x / 1000;
   uint8_t hours = x / 3600;
   uint8_t minutes = (x / 60) - (hours * 60);
@@ -178,6 +179,7 @@ void loadSettingsFromEEPROM() {
   EEPROM.get(EE_STEALTHMODE_ADDRESS, isStealthMode);
   EEPROM.get(EE_DUTYCYCLE_ADDRESS, dutyCycleLCDPercent);
   EEPROM.get(EE_VOLUME_ADDRESS, volume);
+  EEPROM.get(EE_CURRENTHEME_ADDRESS, currentTheme);
 
   for (int i = 0; i < NUM_OF_STATES; i++) {
     EEPROM.get(EE_STATES_MAX_ADDRESS - ((i+1)*SIZE_OF_STATE), states[i]);

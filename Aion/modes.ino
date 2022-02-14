@@ -120,7 +120,7 @@ uint8_t handleDutyCycleEditMode (uint8_t dutyCycleLCDPercent, int8_t change) {
   coords[0] = tft.width()/2;
   coords[1] = 60;
   char dutyCycleText[6];
-  sprintf(dutyCycleText, " %hu ", dutyCycleLCDPercent);
+  sprintf(dutyCycleText, " %hu %% ", dutyCycleLCDPercent);
   
   adjustTextCoords(coords, dutyCycleText, 1, 2);
   tft.setCursor(coords[0], coords[1]);
@@ -177,4 +177,102 @@ bool handleStealthEditMode (bool isStealthMode, int8_t change) {
 
   
   return isStealthMode;
+}
+
+uint8_t handleThemeEditMode(uint8_t currentTheme, int8_t change) {
+  int8_t newTheme = currentTheme + change;
+
+  currentTheme = constrain(newTheme, 0, NUM_OF_THEMES-1);
+  ThemeGUI theme = themes[currentTheme];
+
+  uint8_t coords[2];
+
+  coords[0] = tft.width()/2;
+  coords[1] = 20;
+  char title[] = "Color theme";
+  
+  adjustTextCoords(coords, title, 1, 2);
+  tft.setCursor(coords[0], coords[1]);
+  tft.setTextSize(2);
+  tft.println(title);
+  
+  coords[0] = tft.width()/2;
+  coords[1] = 60;
+  char themeText[20];
+  sprintf(themeText, "%s", theme.verboseName);
+  
+  adjustTextCoords(coords, themeText, 1, 2);
+  tft.setCursor(coords[0], coords[1]);
+  tft.setTextSize(2);
+  tft.println(themeText);
+
+  double yStart = PROGRESS_BAR_YSTART_DEFAULT;
+  double xStart = PROGRESS_BAR_XSTART_DEFAULT + PROGRESS_BAR_PADDINGX_DEFAULT;
+  double width = tft.width()-2*PROGRESS_BAR_PADDINGX_DEFAULT;
+  double height = PROGRESS_BAR_HEIGHT_DEFAULT; 
+  
+  double percentage = currentTheme/double(NUM_OF_THEMES-1);
+  printProgressBar(percentage, xStart, yStart, width, height);
+
+
+  return currentTheme;
+}
+
+void displayDeviceInfo() {
+  uint8_t paddingX = 8;
+  uint8_t paddingY = 16;
+  uint8_t coords[] = {tft.width()/2, paddingY};
+  char text[30];
+  
+  adjustTextCoords(coords, PROJECT_TITLE, 1, 1);
+  tft.setCursor(coords[0], coords[1]);
+  tft.setTextSize(1);
+  tft.println(PROJECT_TITLE);
+
+  coords[0] = paddingX;
+  coords[1] += paddingY*1.5;
+
+  sprintf(text, "Made by    %s", AUTHOR_NICKNAME);
+  adjustTextCoords(coords, text, 0, 1);
+  tft.setCursor(coords[0], coords[1]);
+  tft.setTextSize(1);
+  tft.println(text);
+
+  coords[1] += paddingY;
+  sprintf(text, "Version    %s", VERSION);
+  adjustTextCoords(coords, text, 0, 1);
+  tft.setCursor(coords[0], coords[1]);
+  tft.setTextSize(1);
+  tft.println(text);
+
+  coords[1] += paddingY;
+  sprintf(text, "Assembled  %s", DATE_CREATED);
+  adjustTextCoords(coords, text, 0, 1);
+  tft.setCursor(coords[0], coords[1]);
+  tft.setTextSize(1);
+  tft.println(text);
+
+  coords[1] += paddingY;
+  sprintf(text, "Updated    %s", DATE_UPDATED);
+  adjustTextCoords(coords, text, 0, 1);
+  tft.setCursor(coords[0], coords[1]);
+  tft.setTextSize(1);
+  tft.println(text);
+
+
+  HumanTime timeNowHuman = convertMillisToHumanFormat(millis());
+  coords[1] += paddingY;
+  sprintf(text, "Uptime     %s", timeNowHuman.stringFormat);
+  adjustTextCoords(coords, text, 0, 1);
+  tft.setCursor(coords[0], coords[1]);
+  tft.setTextSize(1);
+  tft.println(text);
+
+  coords[0] = tft.width()/2;
+  coords[1] += paddingY*1.5;
+  sprintf(text, "Dla aaaaaaaa aaaaaaaaa");
+  adjustTextCoords(coords, text, 1, 1);
+  tft.setCursor(coords[0], coords[1]);
+  tft.setTextSize(1);
+  tft.println(text);
 }

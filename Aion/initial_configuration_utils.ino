@@ -20,6 +20,7 @@ void fillEEPROMwithDefaults() {
   EEPROM.put(EE_STEALTHMODE_ADDRESS, isStealthMode);
   EEPROM.put(EE_DUTYCYCLE_ADDRESS, dutyCycleLCDPercent);
   EEPROM.put(EE_VOLUME_ADDRESS, volume);
+  EEPROM.put(EE_CURRENTHEME_ADDRESS, currentTheme);
 
   isStealthMode = 0;
   dutyCycleLCDPercent = 0;
@@ -28,6 +29,7 @@ void fillEEPROMwithDefaults() {
   EEPROM.get(EE_STEALTHMODE_ADDRESS, isStealthMode);
   EEPROM.get(EE_DUTYCYCLE_ADDRESS, dutyCycleLCDPercent);
   EEPROM.get(EE_VOLUME_ADDRESS, volume);
+  EEPROM.get(EE_CURRENTHEME_ADDRESS, currentTheme);
 
   Serial.print("Stealth Mode = ");
   Serial.println(isStealthMode);
@@ -35,6 +37,8 @@ void fillEEPROMwithDefaults() {
   Serial.println(dutyCycleLCDPercent);
   Serial.print("Volume = ");
   Serial.println(volume);
+  Serial.print("Theme = ");
+  Serial.println(currentTheme);
 
 
   Serial.println("*****************************");

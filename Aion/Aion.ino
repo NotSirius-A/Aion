@@ -6,12 +6,14 @@
 #include "states_config.h"
 #include "GUI_config.h"
 #include "EEPROM_config.h"
+#include "themes.h"
 
 Adafruit_ST7735 tft = Adafruit_ST7735(LCD_TFT_CS, LCD_TFT_DC, LCD_TFT_RST);
 
-word PRIMARY_THEME_COLOR = PRIMARY_THEME_COLOR_DEFAULT;
-word SECONDARY_THEME_COLOR = SECONDARY_THEME_COLOR_DEFAULT;
-word BACKGROUND_COLOR = BACKGROUND_COLOR_DEFAULT;
+word PRIMARY_THEME_COLOR = themes[0].primaryColor;
+word SECONDARY_THEME_COLOR = themes[0].secondaryColor;
+word BACKGROUND_COLOR = themes[0].backgroundColor;
+uint8_t currentTheme = 0;
 
 uint8_t currentState = 0;
 unsigned long lastTransitionTime = 0;
@@ -32,6 +34,7 @@ uint8_t dutyCycleLCDPercent = DUTY_CYCLE_LCD_PERCENT_DEFAULT;
 bool isStealthMode = STEALTHMODE_DEFAULT;
 
 uint8_t volume = VOLUME_DEFAULT;
+
 
 typedef struct HumanTime {
   uint32_t milliseconds;
@@ -54,7 +57,11 @@ void setup() {
 
   //fillEEPROMwithDefaults();
   loadSettingsFromEEPROM();
-  
+
+
+
+
+
   pinMode(16, OUTPUT);
   digitalWrite(16, HIGH);
 
@@ -68,9 +75,11 @@ void setup() {
   tft.initR(INITR_GREENTAB);
   tft.setTextWrap(false);
   tft.setRotation(1);
+  PRIMARY_THEME_COLOR = themes[currentTheme].primaryColor;
+  SECONDARY_THEME_COLOR = themes[currentTheme].secondaryColor;
+  BACKGROUND_COLOR = themes[currentTheme].backgroundColor;
+  tft.setTextColor(PRIMARY_THEME_COLOR, BACKGROUND_COLOR);
   tft.fillScreen(BACKGROUND_COLOR);
-  tft.setTextColor(PRIMARY_THEME_COLOR, ST77XX_BLACK);
-
 
     
   /* 
@@ -100,17 +109,18 @@ void loop() {
   if (currentMode != lastMode) {
     //Clear the screen when mode changes, to reset GUI
     tft.fillScreen(BACKGROUND_COLOR);
-
-    //Reset the timer when mode changes happens
-    lastTransitionTime = timeNow;
   }
 
-  
+  uint32_t pulseLength = states[currentState].period/2;
+  int32_t timeUntilTransition = getTimeUntilTransition(timeNow, lastTransitionTime , currentState, states);
   if (isStealthMode && currentMode == 0) {
+    digitalWrite(LCD_BACKLIGHT, LOW);
+  } else if ((((timeUntilTransition % pulseLength) <= pulseLength*(1-dutyCycleLCDPercent/200.0f) && ((timeUntilTransition % pulseLength) >= pulseLength*(dutyCycleLCDPercent/200.0f)))) && currentMode == 0) {
     digitalWrite(LCD_BACKLIGHT, LOW);
   } else {
     digitalWrite(LCD_BACKLIGHT, HIGH);
   }
+
 
   switch(currentMode) {
     /*
@@ -118,7 +128,6 @@ void loop() {
       but only when its directly inside a case, nested are fine 
     */
     case 0: 
-      int32_t timeUntilTransition;
       timeUntilTransition = getTimeUntilTransition(timeNow, lastTransitionTime , currentState, states);
 
       HumanTime timeStruct;
@@ -185,6 +194,28 @@ void loop() {
     case 4:
       volume = handleVolumeControlMode(volume, encoderValueChange);
       break;
+    case 5:
+      uint8_t lastTheme;
+      lastTheme = currentTheme;
+      currentTheme = handleThemeEditMode(currentTheme, encoderValueChange);
+      if (lastTheme != currentTheme) {
+        PRIMARY_THEME_COLOR = themes[currentTheme].primaryColor;
+        SECONDARY_THEME_COLOR = themes[currentTheme].secondaryColor;
+        BACKGROUND_COLOR = themes[currentTheme].backgroundColor;
+        tft.setTextColor(PRIMARY_THEME_COLOR, BACKGROUND_COLOR);
+        tft.fillScreen(BACKGROUND_COLOR);
+      }
+      break;
+    case 6:
+
+    
+      //if ((timeNow - debounceTimeLast) > DEBOUNCE_PERIOD*3) {
+        displayDeviceInfo();
+      //}
+
+
+      
+      break;
       
     default:
       Serial.println("BAD MODE VALUE");
@@ -198,6 +229,8 @@ void loop() {
   }
 
   if ((timeNow - EEPROMSaveTimeLast) > EEPROM_SAVE_PERIOD) {
+    EEPROMSaveTimeLast = timeNow;
+    
     bool oldStealthMode;
     EEPROM.get(EE_STEALTHMODE_ADDRESS, oldStealthMode);
     if (oldStealthMode != isStealthMode) {
@@ -215,6 +248,12 @@ void loop() {
     if (oldVolume != volume) {
       EEPROM.put(EE_VOLUME_ADDRESS, volume);
     }
+
+    uint8_t oldTheme;
+    EEPROM.get(EE_CURRENTHEME_ADDRESS, oldTheme);
+    if (oldTheme != currentTheme) {
+      EEPROM.put(EE_CURRENTHEME_ADDRESS, currentTheme);
+    }
   
     State oldState;
     EEPROM.get(EE_STATES_MAX_ADDRESS - ((currentStateEdit+1)*SIZE_OF_STATE), oldState);;
@@ -227,6 +266,8 @@ void loop() {
 void handleTransition(unsigned long timeSinceStarted, uint32_t pausePeriod, uint8_t currentState, uint8_t volume, bool isStealthMode) {
   if (isStealthMode) {
     volume = 0;
+  } else {
+    digitalWrite(LCD_BACKLIGHT, HIGH);
   }
   
   uint8_t coords[2] = {tft.width()/2, tft.height()/2};

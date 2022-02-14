@@ -2,9 +2,9 @@
   Saving to EEPROM should be done ONLY on update, not with every cycle, however to addtionally protect the user, also
   Allow saving once every EEPROM_SAVE_PERIOD to extend EEPROM lifetime
   This also means any change user makes will be saved after 0-EEPROM_SAVE_PERIOD milliseconds, so set this carefully
-  5*60*1000ms = 5min
+  5*60*1000ms = 3000000ms = 5min
 */
-#define EEPROM_SAVE_PERIOD 1 //300000
+#define EEPROM_SAVE_PERIOD 300000
 
 #define EEPROM_START_ADDRESS 5
 #define EEPROM_PADDING_SIZE 10
@@ -21,7 +21,7 @@
 #define EE_STEALTHMODE_ADDRESS EEPROM_START_ADDRESS
 #define EE_DUTYCYCLE_ADDRESS EE_STEALTHMODE_ADDRESS + EEPROM_PADDING_SIZE
 #define EE_VOLUME_ADDRESS EE_DUTYCYCLE_ADDRESS + EEPROM_PADDING_SIZE
-
+#define EE_CURRENTHEME_ADDRESS EE_VOLUME_ADDRESS + EEPROM_PADDING_SIZE
 
 
 

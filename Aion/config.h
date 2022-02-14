@@ -3,6 +3,8 @@
 #define AUTHOR_NICKNAME "NotSirius-A"
 #define SHORT_GITHUB_LINK "github.com/NotSirius-A"
 #define GITHUB_LINK "https://github.com/NotSirius-A"
+#define DATE_CREATED "DD/MM/YYYY"
+#define DATE_UPDATED "DD/MM/YYYY"
 
 
 
@@ -26,7 +28,7 @@
 #define SPLASH_SCREEN_DURATION 2000
 
 #define MODE_BUTTON PRIMARY_BUTTON
-#define NUM_OF_MODES 5
+#define NUM_OF_MODES 7
 
 #define DEBOUNCE_PERIOD 50
 
