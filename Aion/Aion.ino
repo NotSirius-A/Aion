@@ -49,23 +49,20 @@ void setup() {
   pinMode(SECONDARY_BUTTON, INPUT_PULLUP);
   pinMode(SPEAKER_PIN, OUTPUT);
   digitalWrite(SPEAKER_PIN, LOW);
+  pinMode(GREEN_LED_PIN, OUTPUT);
+  digitalWrite(GREEN_LED_PIN, LOW);
   pinMode(BLUE_LED_PIN, OUTPUT);
   digitalWrite(BLUE_LED_PIN, LOW);
+  pinMode(RED_LED_PIN, OUTPUT);
+  digitalWrite(RED_LED_PIN, LOW);
   pinMode(LCD_BACKLIGHT, OUTPUT);
   digitalWrite(LCD_BACKLIGHT, HIGH);
 
+  pinMode(ENCODER_VCC, OUTPUT);
+  digitalWrite(ENCODER_VCC, HIGH);
 
   //fillEEPROMwithDefaults();
   loadSettingsFromEEPROM();
-
-
-
-
-
-  pinMode(16, OUTPUT);
-  digitalWrite(16, HIGH);
-
-
 
   
   
@@ -151,20 +148,27 @@ void loop() {
       
       if (timeUntilTransition <= 0) {
         uint32_t pausePeriod = states[currentState].pausePeriod;
-        currentState++;
-        // Loop back to state 0 when last state ends
-        if (currentState >= NUM_OF_STATES) {
-          currentState = 0; 
-        }
+
+        // Increment until it finds a non-zero State
+        do {
+          currentState++;
+          // Loop back to state 0 when last state ends
+          if (currentState >= NUM_OF_STATES) {
+            currentState = 0; 
+          } 
+        } while (states[currentState].period == 0);
+        
         
         // Execute some code when transition to another state happens, for example let user know a transition happened with sound etc.
-        tft.fillScreen(ST77XX_BLACK);
+        tft.fillScreen(BACKGROUND_COLOR);
         for (unsigned long startTime = timeNow; (timeNow - startTime) < pausePeriod;) {
           handleTransition(timeNow - startTime, pausePeriod, currentState, volume, isStealthMode);
           timeNow = millis();
         }
         analogWrite(SPEAKER_PIN, LOW);
         digitalWrite(BLUE_LED_PIN, LOW);
+        digitalWrite(RED_LED_PIN, LOW);
+        digitalWrite(GREEN_LED_PIN, LOW);
         tft.fillScreen(BACKGROUND_COLOR);
         
         lastTransitionTime = timeNow;
@@ -194,6 +198,7 @@ void loop() {
     case 4:
       volume = handleVolumeControlMode(volume, encoderValueChange);
       break;
+      
     case 5:
       uint8_t lastTheme;
       lastTheme = currentTheme;
@@ -206,15 +211,11 @@ void loop() {
         tft.fillScreen(BACKGROUND_COLOR);
       }
       break;
-    case 6:
-
-    
-      //if ((timeNow - debounceTimeLast) > DEBOUNCE_PERIOD*3) {
-        displayDeviceInfo();
-      //}
-
-
       
+    case 6:
+      if ((timeNow - debounceTimeLast+1) > DEBOUNCE_PERIOD || lastMode != currentMode) {
+        displayDeviceInfo();
+      }
       break;
       
     default:
@@ -263,7 +264,7 @@ void loop() {
   }
 }
 
-void handleTransition(unsigned long timeSinceStarted, uint32_t pausePeriod, uint8_t currentState, uint8_t volume, bool isStealthMode) {
+void handleTransition(unsigned long timeSinceStarted, uint32_t pausePeriod, uint8_t newState, uint8_t volume, bool isStealthMode) {
   if (isStealthMode) {
     volume = 0;
   } else {
@@ -271,19 +272,27 @@ void handleTransition(unsigned long timeSinceStarted, uint32_t pausePeriod, uint
   }
   
   uint8_t coords[2] = {tft.width()/2, tft.height()/2};
-  adjustTextCoords(coords, states[currentState].verboseName, 1, 2);
+  adjustTextCoords(coords, states[newState].verboseName, 1, 2);
   tft.setCursor(coords[0], coords[1]);
   tft.setTextSize(2);
-  tft.println(states[currentState].verboseName);
+  tft.println(states[newState].verboseName);
 
-  unsigned long pulseLength = pausePeriod/(2*(currentState+1));
+  uint8_t type = states[newState].type;
+
+  unsigned long pulseLength = pausePeriod/(2*((newState/2)+1));
   if (timeSinceStarted < pausePeriod/2) {
     digitalWrite(BLUE_LED_PIN, HIGH);
     analogWrite(SPEAKER_PIN, volume);
   } else if (((timeSinceStarted-pausePeriod/2) % pulseLength) > pulseLength/2){
-    digitalWrite(BLUE_LED_PIN, HIGH);
+    if (type == 0) {
+      digitalWrite(RED_LED_PIN, HIGH);
+    } else if (type == 1) {
+      digitalWrite(GREEN_LED_PIN, HIGH);
+    }
     analogWrite(SPEAKER_PIN, volume);
   } else {
+    digitalWrite(GREEN_LED_PIN, LOW);
+    digitalWrite(RED_LED_PIN, LOW);
     digitalWrite(BLUE_LED_PIN, LOW);
     analogWrite(SPEAKER_PIN, LOW);
   }

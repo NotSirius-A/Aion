@@ -8,10 +8,14 @@ State handleStateLengthEditMode(State state, int8_t change) {
   period -= period % STATE_CHANGE_MULTIPLIER;
 
 
-  if (period < MIN_STATE_PERIOD) {
+  if (period < 0) {
     state.period = MAX_STATE_PERIOD;
-  } else if (period > MAX_STATE_PERIOD) {
+  } else if (period < MIN_STATE_PERIOD && change > 0){
     state.period = MIN_STATE_PERIOD;
+  } else if (period < MIN_STATE_PERIOD) {
+    state.period = 0;
+  } else if (period > MAX_STATE_PERIOD) {
+    state.period = 0;
   } else {
     state.period = period;
   }
@@ -268,11 +272,11 @@ void displayDeviceInfo() {
   tft.setTextSize(1);
   tft.println(text);
 
-  coords[0] = tft.width()/2;
-  coords[1] += paddingY*1.5;
-  sprintf(text, "Dla aaaaaaaa aaaaaaaaa");
-  adjustTextCoords(coords, text, 1, 1);
-  tft.setCursor(coords[0], coords[1]);
-  tft.setTextSize(1);
-  tft.println(text);
+//  coords[0] = tft.width()/2;
+//  coords[1] += paddingY*1.5;
+//  sprintf(text, "Dla aaaaaaaa aaaaaaaaa");
+//  adjustTextCoords(coords, text, 1, 1);
+//  tft.setCursor(coords[0], coords[1]);
+//  tft.setTextSize(1);
+//  tft.println(text);
 }

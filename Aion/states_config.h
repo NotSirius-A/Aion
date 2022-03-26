@@ -6,43 +6,43 @@ typedef struct State {
 };
 
 // 60s * 60s = 3600s = 1h, 3600s * 1000ms = 3600000ms = 1h
-#define MIN_STATE_PERIOD 10000
+#define MIN_STATE_PERIOD 30000
 #define MAX_STATE_PERIOD 18000000
 #define STATE_CHANGE_MULTIPLIER 10000
 State states[] = {
   {
-   3000,
-   4000,
+   1800000,
+   8000,
    "Work I",
    0,
   },
   {
-   3000,
-   4000,
+   180000,
+   7000,
    "Pause I",
    1,
   },
   {
-   10000,
-   4000,
+   0,
+   11000,
    "Work II",
    0,
   },
   {
-   10000,
-   4000,
+   0,
+   8000,
    "Pause II",
    1,
   },
   {
-   10000,
-   4000,
+   0,
+   15000,
    "Work III",
    0,
   },
   {
-   10000,
-   4000,
+   0,
+   9000,
    "Pause III",
    1,
   },
