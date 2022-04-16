@@ -37,8 +37,8 @@ ThemeGUI themes[] = {
     "Purple",
   },
   {
-    convertRGB(70, 120, 135),
-    convertRGB(70, 120, 135),
+    convertRGB(75, 130, 145),
+    convertRGB(75, 130, 145),
     convertRGB(0,0,0),
     "Navy Blue",
   },

@@ -42,7 +42,7 @@ State states[] = {
   },
   {
    0,
-   9000,
+   8000,
    "Pause III",
    1,
   },

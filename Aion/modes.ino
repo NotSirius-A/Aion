@@ -274,7 +274,7 @@ void displayDeviceInfo() {
 
 //  coords[0] = tft.width()/2;
 //  coords[1] += paddingY*1.5;
-//  sprintf(text, "Dla aaaaaaaa aaaaaaaaa");
+//  sprintf(text, "dsfsd");
 //  adjustTextCoords(coords, text, 1, 1);
 //  tft.setCursor(coords[0], coords[1]);
 //  tft.setTextSize(1);

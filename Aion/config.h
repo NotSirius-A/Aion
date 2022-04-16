@@ -3,8 +3,8 @@
 #define AUTHOR_NICKNAME "NotSirius-A"
 #define SHORT_GITHUB_LINK "github.com/NotSirius-A"
 #define GITHUB_LINK "https://github.com/NotSirius-A"
-#define DATE_CREATED "26/03/2022"
-#define DATE_UPDATED "26/03/2022"
+#define DATE_CREATED "09/04/2022"
+#define DATE_UPDATED "09/04/2022"
 
 
 
@@ -28,6 +28,8 @@
 #define SPEAKER_PIN 6 //PWM
 #define PRIMARY_BUTTON 17
 #define SECONDARY_BUTTON ENCODER_BUTTON
+#define LCD_TFT_CLK 13
+#define LCD_TFT_DIN 13
 #define LCD_TFT_CS 10
 #define LCD_TFT_RST 9 
 #define LCD_TFT_DC 8
